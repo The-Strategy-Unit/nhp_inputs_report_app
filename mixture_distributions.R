@@ -122,44 +122,60 @@ strategy_lookup <- read.csv('strategy_lookup.csv', header = TRUE)
 normal_dists <- get_normal_distribution_parameters(data)
 
 # 3 Aggregate estimates ----
-# Create mixture distributions for each activity subset:
+
+#' Create mixture distributions for each activity subset:
+#'
+#' @param data A dataframe of with the mu and sigma of the normal distribution
+#' for each peer and activity subset.
+#'
+#' @return
+get_mixture_distributions <- function(data){
+
+  activity_subsets <- data |>
+    dplyr::distinct(activity_subset) |>
+    dplyr::pull()
+
+  mix_dists <- list()
+
+  for (i in (activity_subsets)) {
+    dist_list <- list()
+
+    peers <- data |>
+      dplyr::filter(activity_subset == i) |>
+      dplyr::distinct(peer) |>
+      dplyr::pull()
+
+    for (j in (peers)) {
+      norm_param <- data |>
+        dplyr::filter(activity_subset == i, peer == j) |>
+        dplyr::select(mu, sigma)
+
+      peer_dist <- distr::Norm(mean = norm_param$mu, sd = norm_param$sigma)
+
+      dist_list <- append(dist_list, peer_dist)
+
+      rm(peer_dist, norm_param)
+
+    }
+
+    activity_subset_mix_dist <- distr::UnivarMixingDistribution(Dlist = dist_list)
+
+    mix_dists <- append(mix_dists, activity_subset_mix_dist)
+
+    rm(activity_subset_mix_dist, dist_list, peers)
+
+  }
+
+  return(mix_dists)
+}
+
+mix_dists <- get_mixture_distributions(normal_dists)
+
+# 4 Capture percentiles for ecdfs and pdfs ----
 activity_subsets <- normal_dists |>
   dplyr::distinct(activity_subset) |>
   dplyr::pull()
 
-mix_dists <- list()
-
-for (i in (activity_subsets)) {
-  dist_list <- list()
-
-  peers <- normal_dists |>
-    dplyr::filter(activity_subset == i) |>
-    dplyr::distinct(peer) |>
-    dplyr::pull()
-
-  for (j in (peers)) {
-    norm_param <- normal_dists |>
-      dplyr::filter(activity_subset == i, peer == j) |>
-      dplyr::select(mu, sigma)
-
-
-    peer_dist <- distr::Norm(mean = norm_param$mu, sd = norm_param$sigma)
-
-    dist_list <- append(dist_list, peer_dist)
-
-    rm(peer_dist, norm_param)
-
-  }
-
-  activity_subset_mix_dist <- distr::UnivarMixingDistribution(Dlist = dist_list)
-
-  mix_dists <- append(mix_dists, activity_subset_mix_dist)
-
-  rm(activity_subset_mix_dist, dist_list, peers)
-
-}
-
-# 4 Capture percentiles for ecdfs and pdfs ----
 peer_agg_ecdf_pdf <- data.frame(
   activity_subset = character(),
   q = numeric(),
