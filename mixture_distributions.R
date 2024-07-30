@@ -85,43 +85,42 @@ get_probability_plot <- function(data, type) {
     ggplot2::geom_vline(ggplot2::aes(xintercept = p10), colour = 'blue') +
     ggplot2::geom_vline(ggplot2::aes(xintercept = p90), colour = 'blue') +
     ggplot2::geom_vline(ggplot2::aes(xintercept = mu), colour = 'red') +
-    ggplot2::facet_wrap(ggplot2::vars(activity_subset_label),
+    ggplot2::facet_wrap(ggplot2::vars(mitigator_label),
                         scale = 'free_y') +
     ggplot2::scale_y_continuous(name = y_axis_label,
                                 limits = c(0, y_axis_max)) +
     ggplot2::scale_x_continuous(name = 'estimated percentage reduction') +
     ggplot2::labs(title = title,
-                  subtitle = 'inpatient admissions avoidance',
                   caption = 'p10 and p90 (blue), mean (red)')
 
   return(plot)
 
 }
 
-#' Create mixture distributions for each activity subset:
+#' Create mixture distributions for each mitigator:
 #'
 #' Aggregates over the peers to create a mixture distribution for each activity
 #' subset.
 #'
 #' @param data A dataframe of with the mu and sigma of the normal distribution
-#' for each peer and activity subset.
+#' for each peer and mitigator.
 #'
-#' @return A list of mixture distributions for each activity subset.
-get_mixture_distributions <- function(data, activity_subsets){
+#' @return A list of mixture distributions for each mitigator.
+get_mixture_distributions <- function(data, mitigators){
 
   mix_dists <- list()
 
-  for (i in (activity_subsets)) {
+  for (i in (mitigators)) {
     dist_list <- list()
 
     peers <- data |>
-      dplyr::filter(activity_subset == i) |>
+      dplyr::filter(mitigator == i) |>
       dplyr::distinct(peer) |>
       dplyr::pull()
 
     for (j in (peers)) {
       norm_param <- data |>
-        dplyr::filter(activity_subset == i, peer == j) |>
+        dplyr::filter(mitigator == i, peer == j) |>
         dplyr::select(mu, sigma)
 
       peer_dist <- distr::Norm(mean = norm_param$mu, sd = norm_param$sigma)
@@ -132,11 +131,11 @@ get_mixture_distributions <- function(data, activity_subsets){
 
     }
 
-    activity_subset_mix_dist <- distr::UnivarMixingDistribution(Dlist = dist_list)
+    mitigator_mix_dist <- distr::UnivarMixingDistribution(Dlist = dist_list)
 
-    mix_dists <- append(mix_dists, activity_subset_mix_dist)
+    mix_dists <- append(mix_dists, mitigator_mix_dist)
 
-    rm(activity_subset_mix_dist, dist_list, peers)
+    rm(mitigator_mix_dist, dist_list, peers)
 
   }
 
@@ -145,35 +144,35 @@ get_mixture_distributions <- function(data, activity_subsets){
 
 #' Get percentiles from the mixture distributions.
 #'
-#' Gets the percentiles for the ECDF and PDF of each activity subset's mixture
+#' Gets the percentiles for the ECDF and PDF of each mitigator's mixture
 #' distribution.
 #'
-#' @param data A list of mixture distributions for each activity subset.
-#' @param activity_subsets A vector of the unique activity subsets.
+#' @param data A list of mixture distributions for each mitigator.
+#' @param mitigators A vector of the unique mitigators.
 #'
 #' @return A long dataframe of the percentiles for the ECDF and PDF of each
-#' activity subset's mixture distribution.
-get_percentiles <- function(data, activity_subsets){
+#' mitigator's mixture distribution.
+get_percentiles <- function(data, mitigators){
 
   peer_agg_ecdf_pdf <- data.frame(
-    activity_subset = character(),
+    mitigator = character(),
     q = numeric(),
     ecdf_value = numeric(),
     pdf_value = numeric()
   )
 
-  for (i in (1:length(activity_subsets))) {
-    activity_subset_ecdf_pdf <- data.frame(
-      activity_subset = activity_subsets[i],
+  for (i in (1:length(mitigators))) {
+    mitigator_ecdf_pdf <- data.frame(
+      mitigator = mitigators[i],
       q = seq(0, 100, 1),
       ecdf_value = data[[i]]@p(q = seq(0, 100, 1))
     ) |>
       dplyr::mutate(pdf_value = ecdf_value - lag(ecdf_value, 1))
 
     peer_agg_ecdf_pdf <- peer_agg_ecdf_pdf |>
-      dplyr::bind_rows(activity_subset_ecdf_pdf)
+      dplyr::bind_rows(mitigator_ecdf_pdf)
 
-    rm(activity_subset_ecdf_pdf)
+    rm(mitigator_ecdf_pdf)
 
   }
 
@@ -184,7 +183,7 @@ get_percentiles <- function(data, activity_subsets){
 #' Get mu and sigma from aggregating over normal distributions.
 #'
 #' @param data  A dataframe with the mu and sigma of the normal distribution
-#' for each peer and activity subset.
+#' for each peer and mitigator.
 #'
 #' @return A dataframe with mu, sigma and number of peers for each mixture
 #' distribution.
@@ -202,7 +201,7 @@ get_mu_sigma <- function(data){
       mu = mean(mu),
       sd = (mean(mu ^ 2 + sigma ^ 2)) ^ (1 / 2),
       peers = dplyr::n(),
-      .by = activity_subset
+      .by = mitigator
     )
 
   return(summary)
@@ -210,31 +209,31 @@ get_mu_sigma <- function(data){
 
 #' Get p10, p50 and p90 of mixture distributions.
 #'
-#' @param data A list of mixture distributions for each activity subset.
-#' @param activity_subsets A vector of the unique activity subsets.
+#' @param data A list of mixture distributions for each mitigator.
+#' @param mitigators A vector of the unique mitigators.
 #'
 #' @return A dataframe with p10, p50 and p90 of each mixture distribution.
-get_p10_p50_p90 <- function(data, activity_subsets){
+get_p10_p50_p90 <- function(data, mitigators){
 
   peer_agg_p10_p50_p90 <- data.frame(
-    activity_subset = character(),
+    mitigator = character(),
     p10 = numeric(),
     p50 = numeric(),
     p90 = numeric()
   )
 
-  for (i in (1:length(activity_subsets))) {
-    activity_subset_p10_p50_p90 <- data.frame(
-      activity_subset = activity_subsets[i],
+  for (i in (1:length(mitigators))) {
+    mitigator_p10_p50_p90 <- data.frame(
+      mitigator = mitigators[i],
       p10 = data[[i]]@q(p = 0.1),
       p50 = data[[i]]@q(p = 0.5),
       p90 = data[[i]]@q(p = 0.9)
     )
 
     peer_agg_p10_p50_p90 <- peer_agg_p10_p50_p90 |>
-      dplyr::bind_rows(activity_subset_p10_p50_p90)
+      dplyr::bind_rows(mitigator_p10_p50_p90)
 
-    rm(activity_subset_p10_p50_p90)
+    rm(mitigator_p10_p50_p90)
 
   }
 
@@ -247,20 +246,20 @@ get_p10_p50_p90 <- function(data, activity_subsets){
 #' distribution.
 #'
 #' @param normal_dists A dataframe with the mu and sigma of the normal
-#' distribution for each peer and activity subset.
-#' @param mix_dists A list of mixture distributions for each activity subset.
-#' @param activity_subsets A vector of the unique activity subsets.
+#' distribution for each peer and mitigator.
+#' @param mix_dists A list of mixture distributions for each mitigator.
+#' @param mitigators A vector of the unique mitigators.
 #'
 #' @return A dataframe of distribution characteristics.
 get_distribution_characteristics <- function(normal_dists,
                                              mix_dists,
-                                             activity_subsets) {
+                                             mitigators) {
   peer_agg_mu_sigma_n <- get_mu_sigma(normal_dists)
 
-  peer_agg_p10_p50_p90 <- get_p10_p50_p90(mix_dists, activity_subsets)
+  peer_agg_p10_p50_p90 <- get_p10_p50_p90(mix_dists, mitigators)
 
   peer_agg_dist_summary <- peer_agg_mu_sigma_n |>
-    dplyr::left_join(peer_agg_p10_p50_p90, dplyr::join_by(activity_subset))
+    dplyr::left_join(peer_agg_p10_p50_p90, dplyr::join_by(mitigator))
 
   return(peer_agg_dist_summary)
 
@@ -271,7 +270,7 @@ get_distribution_characteristics <- function(normal_dists,
 #' Wrangles data to a dataframe for plotting ECDFs and PDFs
 #'
 #' @param peer_agg_ecdf_pdf A long dataframe of the percentiles for the ECDF and
-#' PDF of each activity subset's mixture distribution.
+#' PDF of each mitigator's mixture distribution.
 #' @param peer_agg_dist_summary A dataframe of distribution characteristics.
 #' @param strategy_lookup A dataframe of labels, types and groups for each
 #' strategy.
@@ -281,10 +280,10 @@ wrangle_data_for_plotting_densities <- function(peer_agg_ecdf_pdf,
                                                 peer_agg_dist_summary,
                                                 strategy_lookup) {
   data_wrangled <- peer_agg_ecdf_pdf |>
-    dplyr::left_join(peer_agg_dist_summary, dplyr::join_by(activity_subset)) |>
+    dplyr::left_join(peer_agg_dist_summary, dplyr::join_by(mitigator)) |>
     dplyr::left_join(strategy_lookup,
-                     dplyr::join_by(activity_subset == strategy)) |>
-    dplyr::mutate(activity_subset_label = paste(strategyLabel,
+                     dplyr::join_by(mitigator == strategy)) |>
+    dplyr::mutate(mitigator_label = paste(strategyLabel,
                                                 ' (n = ', peers, ')',
                                                 sep = ''))
 
@@ -306,7 +305,7 @@ library(tidyverse)
 # instead of 0.9
 
 data <- readRDS(file = "input_data.rds") |>
-  rename(activity_subset = strategy)
+  rename(mitigator = strategy)
 
 strategy_lookup <- read.csv('strategy_lookup.csv', header = TRUE)
 
@@ -314,26 +313,25 @@ strategy_lookup <- read.csv('strategy_lookup.csv', header = TRUE)
 normal_dists <- get_normal_distribution_parameters(data)
 
 # 3 Aggregate estimates ----
-activity_subsets <- normal_dists |>
-  dplyr::distinct(activity_subset) |>
+mitigators <- normal_dists |>
+  dplyr::distinct(mitigator) |>
   dplyr::pull()
 
-mix_dists <- get_mixture_distributions(normal_dists, activity_subsets)
+mix_dists <- get_mixture_distributions(normal_dists, mitigators)
 
 # 4 Capture percentiles for ecdfs and pdfs ----
-peer_agg_ecdf_pdf <- get_percentiles(mix_dists, activity_subsets)
+peer_agg_ecdf_pdf <- get_percentiles(mix_dists, mitigators)
 
 # 5 Capture distribution characteristics ----
 # mean, sd, n, p10, p50, p90
 peer_agg_dist_summary <- get_distribution_characteristics(normal_dists,
                                                           mix_dists,
-                                                          activity_subsets)
+                                                          mitigators)
 
 # Save data:
 #saveRDS(peer_agg_dist_summary, file = "mixture_distributions_output.rds")
 
 # 6 Visualise results ----
-
 data_for_plotting <- wrangle_data_for_plotting_densities(peer_agg_ecdf_pdf,
                                     peer_agg_dist_summary,
                                     strategy_lookup)
