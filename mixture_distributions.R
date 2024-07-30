@@ -266,6 +266,32 @@ get_distribution_characteristics <- function(normal_dists,
 
 }
 
+#' Prepare data for plotting densities.
+#'
+#' Wrangles data to a dataframe for plotting ECDFs and PDFs
+#'
+#' @param peer_agg_ecdf_pdf A long dataframe of the percentiles for the ECDF and
+#' PDF of each activity subset's mixture distribution.
+#' @param peer_agg_dist_summary A dataframe of distribution characteristics.
+#' @param strategy_lookup A dataframe of labels, types and groups for each
+#' strategy.
+#'
+#' @return
+wrangle_data_for_plotting_densities <- function(peer_agg_ecdf_pdf,
+                                                peer_agg_dist_summary,
+                                                strategy_lookup) {
+  data_wrangled <- peer_agg_ecdf_pdf |>
+    dplyr::left_join(peer_agg_dist_summary, dplyr::join_by(activity_subset)) |>
+    dplyr::left_join(strategy_lookup,
+                     dplyr::join_by(activity_subset == strategy)) |>
+    dplyr::mutate(activity_subset_label = paste(strategyLabel,
+                                                ' (n = ', peers, ')',
+                                                sep = ''))
+
+  return(data_wrangled)
+
+}
+
 # 0 Setup ----
 library(distr)
 library(tidyverse)
@@ -303,30 +329,23 @@ peer_agg_dist_summary <- get_distribution_characteristics(normal_dists,
                                                           mix_dists,
                                                           activity_subsets)
 
-rm(activity_subsets)
-
 # Save data:
 #saveRDS(peer_agg_dist_summary, file = "mixture_distributions_output.rds")
 
 # 6 Visualise results ----
-# ecds and pdfs for admission avoidance
 
-data_admission_avoidance <- peer_agg_ecdf_pdf |>
-  dplyr::left_join(peer_agg_dist_summary, dplyr::join_by(activity_subset)) |>
-  dplyr::left_join(strategy_lookup, dplyr::join_by(activity_subset == strategy)) |>
-  dplyr::mutate(activity_subset_label = paste(strategyLabel, ' (n = ', peers, ')', sep = '')) |>
-  dplyr::filter(strategyType == 'inpatient admission avoidance')
-
-
+data_for_plotting <- wrangle_data_for_plotting_densities(peer_agg_ecdf_pdf,
+                                    peer_agg_dist_summary,
+                                    strategy_lookup)
 
 # Note I've put a filter on strategyGroup so the plots can be seen more clearly
 # in this toy example, but this can be removed / amended as needed:
-data_admission_avoidance |>
+data_for_plotting |>
   dplyr::filter(strategyGroup ==
                   "Hospital activity amenable to public health interventions") |>
   get_probability_plot(type = "ecdf")
 
-data_admission_avoidance |>
+data_for_plotting |>
   dplyr::filter(strategyGroup ==
                   "Hospital activity amenable to public health interventions") |>
   get_probability_plot(type = "pdf")
