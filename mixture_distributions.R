@@ -98,37 +98,15 @@ get_probability_plot <- function(data, type) {
 
 }
 
-
-
-# 0 Setup ----
-library(distr)
-library(tidyverse)
-
-# 1 Read data ----
-# Start with a dataframe that has at least these columns:
-# peer - fct - usually organisation code
-# strategy - chr - the coder-friendly names of the mitigators
-# lo - dbl - p10 of the distribution
-# hi - dbl - p90 of the distribution
-# note lo and hi should be the numerator of the percentage - for example 90
-# instead of 0.9
-
-data <- readRDS(file = "input_data.rds") |>
-  rename(activity_subset = strategy)
-
-strategy_lookup <- read.csv('strategy_lookup.csv', header = TRUE)
-
-# 2 Wrangle data ----
-normal_dists <- get_normal_distribution_parameters(data)
-
-# 3 Aggregate estimates ----
-
 #' Create mixture distributions for each activity subset:
+#'
+#' Aggregates over the peers to create a mixture distribution for each activity
+#' subset.
 #'
 #' @param data A dataframe of with the mu and sigma of the normal distribution
 #' for each peer and activity subset.
 #'
-#' @return
+#' @return A list of mixture distributions for each activity subset.
 get_mixture_distributions <- function(data){
 
   activity_subsets <- data |>
@@ -169,35 +147,75 @@ get_mixture_distributions <- function(data){
   return(mix_dists)
 }
 
+#' Get percentiles from the mixture distributions.
+#'
+#' Gets the percentiles for the ECDF and PDF of each activity subset's mixture
+#' distribution.
+#'
+#' @param data A list of mixture distributions for each activity subset.
+#' @param activity_subsets A vector of the unique activity subsets.
+#'
+#' @return A long dataframe of the percentiles for the ECDF and PDF of each
+#' activity subset's mixture distribution.
+get_percentiles <- function(data, activity_subsets){
+
+  peer_agg_ecdf_pdf <- data.frame(
+    activity_subset = character(),
+    q = numeric(),
+    ecdf_value = numeric(),
+    pdf_value = numeric()
+  )
+
+  for (i in (1:length(activity_subsets))) {
+    activity_subset_ecdf_pdf <- data.frame(
+      activity_subset = activity_subsets[i],
+      q = seq(0, 100, 1),
+      ecdf_value = data[[i]]@p(q = seq(0, 100, 1))
+    ) |>
+      dplyr::mutate(pdf_value = ecdf_value - lag(ecdf_value, 1))
+
+    peer_agg_ecdf_pdf <- peer_agg_ecdf_pdf |>
+      dplyr::bind_rows(activity_subset_ecdf_pdf)
+
+    rm(activity_subset_ecdf_pdf)
+
+  }
+
+  return(peer_agg_ecdf_pdf)
+
+}
+
+# 0 Setup ----
+library(distr)
+library(tidyverse)
+
+# 1 Read data ----
+# Start with a dataframe that has at least these columns:
+# peer - fct - usually organisation code
+# strategy - chr - the coder-friendly names of the mitigators
+# lo - dbl - p10 of the distribution
+# hi - dbl - p90 of the distribution
+# note lo and hi should be the numerator of the percentage - for example 90
+# instead of 0.9
+
+data <- readRDS(file = "input_data.rds") |>
+  rename(activity_subset = strategy)
+
+strategy_lookup <- read.csv('strategy_lookup.csv', header = TRUE)
+
+# 2 Wrangle data ----
+normal_dists <- get_normal_distribution_parameters(data)
+
+# 3 Aggregate estimates ----
 mix_dists <- get_mixture_distributions(normal_dists)
 
 # 4 Capture percentiles for ecdfs and pdfs ----
+
 activity_subsets <- normal_dists |>
   dplyr::distinct(activity_subset) |>
   dplyr::pull()
 
-peer_agg_ecdf_pdf <- data.frame(
-  activity_subset = character(),
-  q = numeric(),
-  ecdf_value = numeric(),
-  pdf_value = numeric()
-)
-
-
-for (i in (1:length(activity_subsets))) {
-  activity_subset_ecdf_pdf <- data.frame(
-    activity_subset = activity_subsets[i],
-    q = seq(0, 100, 1),
-    ecdf_value = mix_dists[[i]]@p(q = seq(0, 100, 1))
-  ) |>
-    dplyr::mutate(pdf_value = ecdf_value - lag(ecdf_value, 1))
-
-  peer_agg_ecdf_pdf <- peer_agg_ecdf_pdf |>
-    dplyr::bind_rows(activity_subset_ecdf_pdf)
-
-  rm(activity_subset_ecdf_pdf)
-
-}
+peer_agg_ecdf_pdf <- get_percentiles(mix_dists, activity_subsets)
 
 # 5 Capture distribution characteristics ----
 # mean, sd, p10, p50, p90
@@ -206,7 +224,6 @@ for (i in (1:length(activity_subsets))) {
 # mu_mix = sum(mu) / n
 # sd_mix = ( sum(mu^2 + sigma^2) / n ) ^ (1/2)
 # source : https://stats.stackexchange.com/questions/447626/mean-and-variance-of-a-mixture-distribution
-
 peer_agg_mu_sigma_n <- normal_dists |>
   dplyr::summarise(
     mu = mean(mu),
