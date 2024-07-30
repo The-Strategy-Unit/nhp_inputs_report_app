@@ -10,14 +10,13 @@ source("mixture_distributions_functions.R")
 # 1 Read data ----
 # Start with a dataframe that has at least these columns:
 # peer - fct - usually organisation code
-# strategy - chr - the coder-friendly names of the mitigators
+# mitigator - chr - the coder-friendly names of the mitigators
 # lo - dbl - p10 of the distribution
 # hi - dbl - p90 of the distribution
 # note lo and hi should be the numerator of the percentage - for example 90
 # instead of 0.9
 
-data <- readRDS(file = "input_data.rds") |>
-  rename(mitigator = strategy)
+data <- readRDS(file = "input_data.rds")
 
 strategy_lookup <- read.csv('strategy_lookup.csv', header = TRUE)
 
