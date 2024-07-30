@@ -181,6 +181,91 @@ get_percentiles <- function(data, activity_subsets){
 
 }
 
+#' Get mu and sigma from aggregating over normal distributions.
+#'
+#' @param data  A dataframe with the mu and sigma of the normal distribution
+#' for each peer and activity subset.
+#'
+#' @return A dataframe with mu, sigma and number of peers for each mixture
+#' distribution.
+#'
+#' Note mean and sd of unweighted mixture distribution of Normal distributions
+#' is:
+#' mu_mix = sum(mu) / n
+#' sd_mix = ( sum(mu^2 + sigma^2) / n ) ^ (1/2)
+#' source : https://stats.stackexchange.com/questions/447626/mean-and-variance-of-a-mixture-distribution
+
+get_mu_sigma <- function(data){
+
+  summary <- data |>
+    dplyr::summarise(
+      mu = mean(mu),
+      sd = (mean(mu ^ 2 + sigma ^ 2)) ^ (1 / 2),
+      peers = dplyr::n(),
+      .by = activity_subset
+    )
+
+  return(summary)
+}
+
+#' Get p10, p50 and p90 of mixture distributions.
+#'
+#' @param data A list of mixture distributions for each activity subset.
+#' @param activity_subsets A vector of the unique activity subsets.
+#'
+#' @return A dataframe with p10, p50 and p90 of each mixture distribution.
+get_p10_p50_p90 <- function(data, activity_subsets){
+
+  peer_agg_p10_p50_p90 <- data.frame(
+    activity_subset = character(),
+    p10 = numeric(),
+    p50 = numeric(),
+    p90 = numeric()
+  )
+
+  for (i in (1:length(activity_subsets))) {
+    activity_subset_p10_p50_p90 <- data.frame(
+      activity_subset = activity_subsets[i],
+      p10 = data[[i]]@q(p = 0.1),
+      p50 = data[[i]]@q(p = 0.5),
+      p90 = data[[i]]@q(p = 0.9)
+    )
+
+    peer_agg_p10_p50_p90 <- peer_agg_p10_p50_p90 |>
+      dplyr::bind_rows(activity_subset_p10_p50_p90)
+
+    rm(activity_subset_p10_p50_p90)
+
+  }
+
+  return(peer_agg_p10_p50_p90)
+}
+
+#' Summarise mixture distributions.
+#'
+#' Get mu, sigma, number of peers, p10, p50 and p90 for each mixture
+#' distribution.
+#'
+#' @param normal_dists A dataframe with the mu and sigma of the normal
+#' distribution for each peer and activity subset.
+#' @param mix_dists A list of mixture distributions for each activity subset.
+#' @param activity_subsets A vector of the unique activity subsets.
+#'
+#' @return A dataframe of distribution characteristics.
+get_distribution_characteristics <- function(normal_dists,
+                                             mix_dists,
+                                             activity_subsets) {
+  peer_agg_mu_sigma_n <- get_mu_sigma(normal_dists)
+
+  peer_agg_p10_p50_p90 <- get_p10_p50_p90(mix_dists, activity_subsets)
+
+  peer_agg_dist_summary <- peer_agg_mu_sigma_n |>
+    dplyr::left_join(peer_agg_p10_p50_p90, dplyr::join_by(activity_subset))
+
+  return(peer_agg_dist_summary)
+
+}
+
 # 0 Setup ----
 library(distr)
 library(tidyverse)
@@ -213,46 +298,12 @@ mix_dists <- get_mixture_distributions(normal_dists, activity_subsets)
 peer_agg_ecdf_pdf <- get_percentiles(mix_dists, activity_subsets)
 
 # 5 Capture distribution characteristics ----
-# mean, sd, p10, p50, p90
+# mean, sd, n, p10, p50, p90
+peer_agg_dist_summary <- get_distribution_characteristics(normal_dists,
+                                                          mix_dists,
+                                                          activity_subsets)
 
-# note mean and sd of unweighted mixture distribution of Normal distributions is
-# mu_mix = sum(mu) / n
-# sd_mix = ( sum(mu^2 + sigma^2) / n ) ^ (1/2)
-# source : https://stats.stackexchange.com/questions/447626/mean-and-variance-of-a-mixture-distribution
-peer_agg_mu_sigma_n <- normal_dists |>
-  dplyr::summarise(
-    mu = mean(mu),
-    sd = (mean(mu ^ 2 + sigma ^ 2)) ^ (1 / 2),
-    peers = dplyr::n(),
-    .by = activity_subset
-  )
-
-peer_agg_p10_p50_p90 <- data.frame(
-  activity_subset = character(),
-  p10 = numeric(),
-  p50 = numeric(),
-  p90 = numeric()
-)
-
-for (i in (1:length(activity_subsets))) {
-  activity_subset_p10_p50_p90 <- data.frame(
-    activity_subset = activity_subsets[i],
-    p10 = mix_dists[[i]]@q(p = 0.1),
-    p50 = mix_dists[[i]]@q(p = 0.5),
-    p90 = mix_dists[[i]]@q(p = 0.9)
-  )
-
-  peer_agg_p10_p50_p90 <- peer_agg_p10_p50_p90 |>
-    dplyr::bind_rows(activity_subset_p10_p50_p90)
-
-  rm(activity_subset_p10_p50_p90)
-
-}
-
-peer_agg_dist_summary <- peer_agg_mu_sigma_n |>
-  dplyr::left_join(peer_agg_p10_p50_p90, dplyr::join_by(activity_subset))
-
-rm(peer_agg_mu_sigma_n, peer_agg_p10_p50_p90, activity_subsets)
+rm(activity_subsets)
 
 # Save data:
 #saveRDS(peer_agg_dist_summary, file = "mixture_distributions_output.rds")
