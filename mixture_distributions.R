@@ -107,11 +107,7 @@ get_probability_plot <- function(data, type) {
 #' for each peer and activity subset.
 #'
 #' @return A list of mixture distributions for each activity subset.
-get_mixture_distributions <- function(data){
-
-  activity_subsets <- data |>
-    dplyr::distinct(activity_subset) |>
-    dplyr::pull()
+get_mixture_distributions <- function(data, activity_subsets){
 
   mix_dists <- list()
 
@@ -207,14 +203,13 @@ strategy_lookup <- read.csv('strategy_lookup.csv', header = TRUE)
 normal_dists <- get_normal_distribution_parameters(data)
 
 # 3 Aggregate estimates ----
-mix_dists <- get_mixture_distributions(normal_dists)
-
-# 4 Capture percentiles for ecdfs and pdfs ----
-
 activity_subsets <- normal_dists |>
   dplyr::distinct(activity_subset) |>
   dplyr::pull()
 
+mix_dists <- get_mixture_distributions(normal_dists, activity_subsets)
+
+# 4 Capture percentiles for ecdfs and pdfs ----
 peer_agg_ecdf_pdf <- get_percentiles(mix_dists, activity_subsets)
 
 # 5 Capture distribution characteristics ----
