@@ -69,6 +69,11 @@ app_server <- function(input, output, session) {
         dplyr::filter(mitigator_activity_type == input$activity_type)
     }
 
+    if (input$mitigator_type != "All") {
+      dat <- dat |>
+        dplyr::filter(mitigator_type %in% input$mitigator_type)
+    }
+
     dat
 
   })
