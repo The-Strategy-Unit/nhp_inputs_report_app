@@ -47,7 +47,7 @@ app_ui <- function(request) {
                   "Focal scheme",
                   bsicons::bs_icon("info-circle")
                 ),
-                "The scheme to highlight in plots. Causes autoselection of peers."
+                "The scheme to highlight in plots."
               ),
               choices = NULL,
               selected = NULL,
@@ -73,7 +73,7 @@ app_ui <- function(request) {
                   "Select all schemes?",
                   bsicons::bs_icon("info-circle")
                 ),
-                "Automatically select all schemes at once."
+                "Select all available schemes at once."
               ),
               value = TRUE
             ),
@@ -113,13 +113,13 @@ app_ui <- function(request) {
               multiple = FALSE
             ),
             shiny::selectInput(
-              inputId = "mitigator_groups",
+              inputId = "mitigator_subsets",
               label = bslib::tooltip(
                 trigger = list(
                   "Mitigator group",
                   bsicons::bs_icon("info-circle")
                 ),
-                "Select a group to pre-populate the mitigator selection box."
+                "Select a group to filter mitigators by."
               ),
               choices = NULL,
               selected = NULL,
@@ -132,7 +132,7 @@ app_ui <- function(request) {
                   "Mitigators to visualise",
                   bsicons::bs_icon("info-circle")
                 ),
-                "Prepopulated given the activity type, mitigator type and mitigator-group selections, but you can add or remove individual mitigators."
+                "Prepopulated given the mitigator filters applied above."
               ),
               choices = NULL,
               selected = NULL,

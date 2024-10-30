@@ -71,7 +71,7 @@ app_server <- function(input, output, session) {
 
     if (input$mitigator_type != "All") {
       dat <- dat |>
-        dplyr::filter(mitigator_type %in% input$mitigator_type)
+        dplyr::filter(mitigator_type == input$mitigator_type)
     }
 
     dat
@@ -82,13 +82,13 @@ app_server <- function(input, output, session) {
     dat_filtered() |> get_all_mitigators()
   })
 
-  available_mitigator_groups <- reactive({
-    dat_filtered() |> get_all_mitigator_groups()
+  available_mitigator_subsets <- reactive({
+    dat_filtered() |> get_all_mitigator_subsets()
   })
 
-  mitigator_group_set <- reactive({
+  mitigator_subset_set <- reactive({
     dat_filtered() |>
-      dplyr::filter(mitigator_group == input$mitigator_groups) |>
+      dplyr::filter(mitigator_subset == input$mitigator_subsets) |>
       dplyr::distinct(mitigator_code) |>
       dplyr::pull()
   })
@@ -220,9 +220,9 @@ app_server <- function(input, output, session) {
   shiny::observe({
     shiny::updateSelectInput(
       session,
-      "mitigator_groups",
-      choices = available_mitigator_groups(),
-      selected = available_mitigator_groups()[1]
+      "mitigator_subsets",
+      choices = available_mitigator_subsets(),
+      selected = available_mitigator_subsets()[1]
     )
   })
 
@@ -231,7 +231,7 @@ app_server <- function(input, output, session) {
       session,
       "mitigators",
       choices = available_mitigators(),
-      selected = mitigator_group_set()
+      selected = mitigator_subset_set()
     )
   })
 

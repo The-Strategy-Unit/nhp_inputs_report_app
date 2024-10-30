@@ -62,6 +62,7 @@ make_mitigator_dt <- function(mitigator_lookup) {
       `Mitigator variable` = `Strategy variable`,
       `Mitigator type`,
       `Activity type`,
+      `Mitigator subset` = `Strategy subset`,
       `Mitigator grouping` = Grouping
     ) |>
     dplyr::mutate(dplyr::across(tidyselect::everything(), factor))
@@ -175,7 +176,7 @@ make_mitigator_uptake_dt <- function(dat, selected_schemes) {
         scheme_code[scheme_code %in% selected_schemes],
         na.rm = TRUE
       ),
-      .by = c(mitigator_activity_type, mitigator_group, mitigator_name)
+      .by = c(mitigator_activity_type, mitigator_subset, mitigator_name)
     ) |>
     # convert to rate
     dplyr::mutate(
@@ -201,7 +202,7 @@ make_mitigator_uptake_dt <- function(dat, selected_schemes) {
     dplyr::mutate(
       # convert mitigators to factors for drop-down selectors in DT
       mitigator_activity_type = mitigator_activity_type |> factor(),
-      mitigator_group = mitigator_group |> factor(),
+      mitigator_subset = mitigator_subset |> factor(),
       mitigator_name = mitigator_name |> factor()
     ) |>
     # display as DT

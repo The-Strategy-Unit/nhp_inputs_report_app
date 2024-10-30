@@ -210,6 +210,7 @@ populate_table <- function(
       mitigator_variable = strategy,
       mitigator_activity_type = `Activity type`,
       mitigator_type = `Mitigator type`,
+      mitigator_subset = `Strategy subset`,
       mitigator_group = Grouping,
       # mitigator value selections
       value_lo = value_1,
@@ -268,10 +269,10 @@ get_all_mitigators <- function(dat) {
     tibble::deframe()
 }
 
-get_all_mitigator_groups <- function(dat) {
+get_all_mitigator_subsets <- function(dat) {
   dat |>
     shiny::req() |>
-    dplyr::distinct(mitigator_group) |>
+    dplyr::distinct(mitigator_subset) |>
     dplyr::pull() |>
     sort()
 }

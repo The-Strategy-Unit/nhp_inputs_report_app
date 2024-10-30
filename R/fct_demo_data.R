@@ -1,7 +1,7 @@
 #' Generate a Simple Demo Dataset
 #' @param n_schemes Integer.
 #' @param n_mitigators Integer.
-#' @param n_mitigator_groups Integer.
+#' @param n_mitigator_subsets Integer.
 #' @param prop_selected Numeric.
 #' @param seed Integer.
 #' @return A data.frame.
@@ -9,7 +9,7 @@
 generate_test_dataset <- function(
     n_schemes = 20,
     n_mitigators = 50,
-    n_mitigator_groups = 8,
+    n_mitigator_subsets = 8,
     prop_selected = 0.6,
     seed = 123
 ) {
@@ -28,11 +28,11 @@ generate_test_dataset <- function(
     split(
       cut(
         seq_along(mitigator),
-        n_mitigator_groups,
-        labels = paste("Group", 1:n_mitigator_groups)
+        n_mitigator_subsets,
+        labels = paste("Group", 1:n_mitigator_subsets)
       )
     ) |>
-    tibble::enframe(name = "mitigator_group", value = "mitigator") |>
+    tibble::enframe(name = "mitigator_subset", value = "mitigator") |>
     tidyr::unnest(mitigator)
 
   combos <- tidyr::crossing(scheme, mitigator) |>
