@@ -95,8 +95,8 @@ app_ui <- function(request) {
                 ),
                 "Select an activity type to filter the mitigators by."
               ),
-              choices = c("All", "Inpatients", "Outpatients", "Accident and Emergency"),
-              selected = "All",
+              choices = NULL,
+              selected = NULL,
               multiple = FALSE
             ),
             shiny::selectInput(
@@ -108,18 +108,18 @@ app_ui <- function(request) {
                 ),
                 "Select the type of mitigator to filter by."
               ),
-              choices = c("All", "Activity avoidance", "Efficiencies"),
-              selected = "All",
+              choices = NULL,
+              selected = NULL,
               multiple = FALSE
             ),
             shiny::selectInput(
-              inputId = "mitigator_subsets",
+              inputId = "mitigator_subset",
               label = bslib::tooltip(
                 trigger = list(
-                  "Mitigator group",
+                  "Mitigator subset",
                   bsicons::bs_icon("info-circle")
                 ),
-                "Select a group to filter mitigators by."
+                "Select a subset group to filter mitigators by."
               ),
               choices = NULL,
               selected = NULL,

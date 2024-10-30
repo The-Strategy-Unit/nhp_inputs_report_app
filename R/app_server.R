@@ -56,42 +56,53 @@ app_server <- function(input, output, session) {
 
   # Reactives ----
 
+  # The peers associated with the focal scheme
   peer_set <- shiny::reactive({
     peers |>
       dplyr::filter(scheme == input$focus_scheme) |>
       dplyr::pull(peer)
   })
 
-  dat_filtered <- reactive({
+  # The full set of available activity types in the raw data
+  available_activity_types <- reactive(get_all_activity_types(dat))
 
-    if (input$activity_type != "All") {
-      dat <- dat |>
-        dplyr::filter(mitigator_activity_type == input$activity_type)
-    }
-
-    if (input$mitigator_type != "All") {
-      dat <- dat |>
-        dplyr::filter(mitigator_type == input$mitigator_type)
-    }
-
-    dat
-
-  })
-
-  available_mitigators <- reactive({
-    dat_filtered() |> get_all_mitigators()
-  })
-
-  available_mitigator_subsets <- reactive({
-    dat_filtered() |> get_all_mitigator_subsets()
-  })
-
-  mitigator_subset_set <- reactive({
-    dat_filtered() |>
-      dplyr::filter(mitigator_subset == input$mitigator_subsets) |>
-      dplyr::distinct(mitigator_code) |>
+  # The set of available mitigator types given the activity type
+  mitigator_type_set <- reactive({
+    dat |>
+      dplyr::filter(mitigator_activity_type %in% input$activity_type) |>
+      dplyr::distinct(mitigator_type) |>
       dplyr::pull()
   })
+
+  # The set of available mitigator subsets given the activity and mitigator type
+  mitigator_subsets_set <- reactive({
+    dat |>
+      dplyr::filter(
+        mitigator_activity_type %in% input$activity_type,
+        mitigator_type %in% input$mitigator_type,
+      ) |>
+      dplyr::distinct(mitigator_subset) |>
+      dplyr::pull()
+  })
+
+  # The set of available mitigators given the activity and mitigator types and
+  # mitigator subsets
+  mitigator_set <- reactive({
+    dat |>
+      dplyr::filter(
+        mitigator_activity_type %in% input$activity_type,
+        mitigator_type %in% input$mitigator_type,
+        mitigator_subset %in% input$mitigator_subset
+      ) |>
+      get_all_mitigators()  # prepare named vector
+  })
+
+  # Current dataset given filters
+  dat_filtered <- reactive({
+    dat |> dplyr::filter(mitigator_code %in% mitigator_set())
+  })
+
+  # Plots
 
   dat_selected_pointrange <- shiny::reactive({
 
@@ -220,9 +231,27 @@ app_server <- function(input, output, session) {
   shiny::observe({
     shiny::updateSelectInput(
       session,
-      "mitigator_subsets",
-      choices = available_mitigator_subsets(),
-      selected = available_mitigator_subsets()[1]
+      "activity_type",
+      choices = available_activity_types(),
+      selected = available_activity_types()[1]
+    )
+  })
+
+  shiny::observe({
+    shiny::updateSelectInput(
+      session,
+      "mitigator_type",
+      choices = mitigator_type_set(),
+      selected = mitigator_type_set()[1]
+    )
+  })
+
+  shiny::observe({
+    shiny::updateSelectInput(
+      session,
+      "mitigator_subset",
+      choices = mitigator_subsets_set(),
+      selected = mitigator_subsets_set()[1]
     )
   })
 
@@ -230,8 +259,8 @@ app_server <- function(input, output, session) {
     shiny::updateSelectInput(
       session,
       "mitigators",
-      choices = available_mitigators(),
-      selected = mitigator_subset_set()
+      choices = mitigator_set(),
+      selected = mitigator_set()
     )
   })
 

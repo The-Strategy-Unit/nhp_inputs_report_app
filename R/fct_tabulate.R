@@ -269,6 +269,22 @@ get_all_mitigators <- function(dat) {
     tibble::deframe()
 }
 
+get_all_activity_types <- function(dat) {
+  dat |>
+    shiny::req() |>
+    dplyr::distinct(mitigator_activity_type) |>
+    dplyr::pull() |>
+    sort()
+}
+
+get_all_mitigator_types <- function(dat) {
+  dat |>
+    shiny::req() |>
+    dplyr::distinct(mitigator_type) |>
+    dplyr::pull() |>
+    sort()
+}
+
 get_all_mitigator_subsets <- function(dat) {
   dat |>
     shiny::req() |>
