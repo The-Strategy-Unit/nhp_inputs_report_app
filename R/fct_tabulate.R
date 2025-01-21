@@ -401,6 +401,63 @@ get_all_mitigator_groups <- function(dat) {
     sort()
 }
 
+#' Prepare Mitigator lookup
+#'
+#' Prepare the mitigator lookup file for subsequent use by
+#' a) cleaning variable names
+#' b) ordering the variables by cardinality
+#'
+#' @param mitigator_lookup Tibble of mitigator lookup data
+#'
+#' @return Tibble of mitigator lookups
+prepare_mitigators <- function(mitigator_lookup) {
+
+  # clean up the variable names
+  mitigator_lookup <-
+    mitigator_lookup |>
+    janitor::clean_names()
+
+  # find out the cardinality of each variable
+  mit_order <-
+    mitigator_lookup |>
+    dplyr::summarise(
+      dplyr::across(
+        dplyr::everything(),
+        \(.x) length(unique(.x))
+      )
+    ) |>
+    tidyr::pivot_longer(cols = dplyr::everything()) |>
+    dplyr::arrange(value)
+
+  # order the variables by cardinality (less to more)
+  mitigator_lookup <-
+    mitigator_lookup |>
+    dplyr::select(dplyr::any_of(mit_order$name)) |>
+    dplyr::rename(mitigator_name = strategy_name) |>
+    dplyr::mutate(mitigator_name = glue::glue('{mitigator_name} [{mitigator_code}]')) |>
+    dplyr::select(-strategy_variable)
+
+  return(mitigator_lookup)
+}
+
+#' Add to the selected mitigator list
+#'
+#' Adds newly selected mitigators to the list of currently selected mitigators
+#'
+#' @param df Tibble of mitigator reference data - e.g. `mitigator_reference`
+#' @param selected_currently A list of mitigator_codes which are currently selected - as provided by `input$mitigators`
+#' @param new_selections A list of newly selected mitigatoe
+#'
+#' @return Vector - mitigator labels with mitigator codes as the value
+add_to_selected_mitigators <- function(df, selected_currently, new_selections) {
+
+  df |>
+    dplyr::filter(mitigator_code %in% c(selected_currently, new_selections)) |>
+    dplyr::select(mitigator_name, mitigator_code) |>
+    tibble::deframe()
+
+}
+
 #' Get a lookup table of participating Trusts
 #'
 #' Read a csv lookup file from Azure storage and do some clean-up to ensure

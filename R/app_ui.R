@@ -15,6 +15,7 @@ app_ui <- function(request) {
     ),
     # Application UI logic
     bslib::page_navbar(
+      theme = bslib::bs_theme(version = 5L),
       id = "page_navbar",
       title = bslib::tooltip(
         trigger = list(
@@ -90,45 +91,88 @@ app_ui <- function(request) {
             id = "accordion_mitigators",
             title = "Select mitigators",
             icon = bsicons::bs_icon("sliders"),
-            shiny::selectInput(
-              inputId = "activity_type",
-              label = bslib::tooltip(
-                trigger = list(
-                  "Activity type",
-                  bsicons::bs_icon("info-circle")
+
+            # new mitigator selection ---
+            shinyWidgets::panel(
+              # NB, using functions from the github {datamods} package repo
+              # as using the CRAN version results in certain bslib containers to
+              # lose page-filling ability. The new functions in the github
+              # repo do not do this. It is possible the CRAN version will catch-up
+              # at some point so we can remove the duplicated functions.
+              # NB, datamod functions are duplicated in the following files:
+              # datamods_select_group.R
+              # datamods_utils_shiny.R
+              # datamods_utils.R
+              select_group_ui(
+                id = 'mitigator_filters',
+                vs_args = list(
+                  search = TRUE,
+                  showValuesAsTags = TRUE
                 ),
-                "Select an activity type to filter the mitigators by."
+                inline = FALSE,
+                params = list(
+                  mitigator_type = list(
+                    inputId = 'mitigator_type',
+                    label = 'Mitigator type',
+                    placeholder = '...'
+                  ),
+                  activity_type = list(
+                    inputId = 'activity_type',
+                    label = 'Activity type',
+                    placeholder = '...'
+                  ),
+                  grouping = list(
+                    inputId = 'grouping',
+                    label = 'Mitigator group',
+                    placeholder = '...'
+                  ),
+                  strategy_subset = list(
+                    inputId = 'strategy_subset',
+                    label = 'Strategy subset',
+                    placeholder = '...'
+                  ),
+                  mitigator_name = list(
+                    inputId = 'mitigator_name',
+                    label = 'Mitigator',
+                    placeholder = '...'
+                  )
+                )
               ),
-              choices = c("All", "Inpatients", "Outpatients", "Accident and Emergency"),
-              selected = "All",
-              multiple = FALSE
+
+              # add some separation between 'reset filters' and below button
+              shiny::br(),
+              shiny::br(),
+
+              # button to add mitigators to the selection box (🍫)
+              shiny::actionButton(
+                inputId = 'mitigators_add_to_selected',
+                label = 'Add to selection',
+                icon = shiny::icon('arrow-down', lib = 'font-awesome'),
+                class = 'btn-light'
+              )
             ),
-            shiny::selectInput(
-              inputId = "mitigator_groups",
-              label = bslib::tooltip(
-                trigger = list(
-                  "Mitigator group",
-                  bsicons::bs_icon("info-circle")
-                ),
-                "Select a group to pre-populate the mitigator selection box."
-              ),
+
+            # list mitigators
+            shiny::selectizeInput(
+              inputId = 'mitigators',
+              label = 'Selected mitigators',
               choices = NULL,
               selected = NULL,
-              multiple = FALSE
+              multiple = TRUE,
+              options = list('plugins' = list('remove_button'))
             ),
-            shiny::selectInput(
-              inputId = "mitigators",
+
+            # clear selected mitigators
+            shiny::actionLink(
+              inputId = 'clear_selected_mitigators',
               label = bslib::tooltip(
                 trigger = list(
-                  "Mitigators to visualise",
-                  bsicons::bs_icon("info-circle")
+                  bsicons::bs_icon("x-lg"),
+                  "Clear selected"
                 ),
-                "Prepopulated given the activity type and mitigator-group selections, but you can add or remove individual mitigators."
+                "Remove all mitigators from the current selection."
               ),
-              choices = NULL,
-              selected = NULL,
-              multiple = TRUE
-            )
+            ),
           ),
           ### other settings ----
           bslib::accordion_panel(
@@ -203,6 +247,7 @@ app_ui <- function(request) {
               ),
               'Customisable point-ranges showing distributions of values by mitigator and scheme'
             ),
+            #fillable = TRUE,
             bslib::layout_sidebar(
               sidebar = bslib::sidebar(
                 #title = "Point-range settings",
