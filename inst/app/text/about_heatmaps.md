@@ -58,6 +58,12 @@ This option controls the visibility of aggregate summaries (minimum, maximum and
 
 Enable this option to include the minimum, maximum and average values on the heatmap plot which is useful when exporting to image - where the tooltip context information is lost.
 
+##### Adorn scheme names?
+
+This option controls whether the scheme name includes additional details, useful when exporting the plot as a static image and the tooltip context information is lost.
+
+Enable this option to extend the scheme names to include scheme code, run stage and years for baseline and horizon.
+
 ##### Order schemes by
 
 Select a value from the drop-down list for how schemes are ordered on the x-axis. The default option is 'Number of mitigators (desc)', with options for:

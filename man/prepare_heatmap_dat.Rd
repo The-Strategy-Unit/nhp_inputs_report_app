@@ -14,7 +14,8 @@ prepare_heatmap_dat(
   mitigator_order,
   values_displayed,
   toggle_heatmap_nee = FALSE,
-  toggle_heatmap_aggregate_summaries = FALSE
+  toggle_heatmap_aggregate_summaries = FALSE,
+  toggle_heatmap_scheme_adornments = FALSE
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ prepare_heatmap_dat(
 \item{toggle_heatmap_nee}{Boolean (default = FALSE) should the display include a column for NEE values for mitigators?}
 
 \item{toggle_heatmap_aggregate_summaries}{Boolean (default = FALSE) should the display include columns showing minimum, maximum and mean values for each mitigator?}
+
+\item{toggle_heatmap_scheme_adornments}{Boolean (default = FALSE) should the scheme details include additional information such as scheme code, run stage and horizon year?}
 }
 \value{
 Tibble of data ready for use with heatmap plots

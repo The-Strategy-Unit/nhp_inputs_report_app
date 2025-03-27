@@ -122,7 +122,8 @@ app_server <- function(input, output, session) {
     dat_return <- update_dat_values(
       dat = dat,
       values_displayed = input$values_displayed,
-      include_point_estimates = input$include_point_estimates
+      include_point_estimates = input$include_point_estimates,
+      focal_scheme_code = input$focus_scheme
     )
 
     return(dat_return)
@@ -321,7 +322,8 @@ app_server <- function(input, output, session) {
         mitigator_order = input$heatmap_mitigator_order,
         values_displayed = input$values_displayed,
         toggle_heatmap_nee = input$toggle_heatmap_nee,
-        toggle_heatmap_aggregate_summaries = input$toggle_heatmap_aggregate_summaries
+        toggle_heatmap_aggregate_summaries = input$toggle_heatmap_aggregate_summaries,
+        toggle_heatmap_scheme_adornments = input$toggle_heatmap_scheme_adornments
       )
 
     return(dat)
@@ -609,7 +611,11 @@ app_server <- function(input, output, session) {
     } else if (temp_scheme_count < 12) {
       base_height <- 200
     } else {
-      base_height <- 300
+      if (input$toggle_heatmap_scheme_adornments) {
+        base_height <- 600
+      } else {
+        base_height <- 300
+      }
     }
 
     # update reactive values

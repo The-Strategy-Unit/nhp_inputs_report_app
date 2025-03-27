@@ -13,6 +13,7 @@
 #' @param values_displayed String description of the values displayed - as defined by `input$values_displayed`
 #' @param toggle_heatmap_nee Boolean (default = FALSE) should the display include a column for NEE values for mitigators?
 #' @param toggle_heatmap_aggregate_summaries Boolean (default = FALSE) should the display include columns showing minimum, maximum and mean values for each mitigator?
+#' @param toggle_heatmap_scheme_adornments  Boolean (default = FALSE) should the scheme details include additional information such as scheme code, run stage and horizon year?
 #'
 #' @returns Tibble of data ready for use with heatmap plots
 prepare_heatmap_dat <- function(
@@ -25,7 +26,8 @@ prepare_heatmap_dat <- function(
     mitigator_order,
     values_displayed,
     toggle_heatmap_nee = FALSE,
-    toggle_heatmap_aggregate_summaries = FALSE
+    toggle_heatmap_aggregate_summaries = FALSE,
+    toggle_heatmap_scheme_adornments = FALSE
 ) {
   ## wrangle data ----
 
@@ -39,6 +41,24 @@ prepare_heatmap_dat <- function(
       mitigator_code %in% mitigator_codes,
       scheme_code %in% scheme_codes
     )
+
+  # should scheme names include scheme code, run stage and baseline/horizon years?
+  if (toggle_heatmap_scheme_adornments) {
+    dat <-
+      dat |>
+      dplyr::mutate(
+        # strip out the pencil and pushpin emojis
+        scheme_name = scheme_name |>
+          stringr::str_remove_all(pattern = " ✏️| 📌"),
+        # add in the requested adornments
+        scheme_name = glue::glue(
+          "{scheme_name} ",
+          "[{scheme_code}] \n",
+          "({run_stage} ",
+          "{year_baseline} to {year_horizon})"
+        )
+      )
+  }
 
   # create a list to hold the working dat objects
   dat_list <- list(dat)
@@ -256,28 +276,37 @@ prepare_heatmap_dat <- function(
     ) |>
     # create the tooltip text
     dplyr::mutate(
+      # extract just the scheme name where it has been 'adorned' with other details
+      scheme_name_bare = scheme_name |>
+        stringr::str_match(pattern = ".*?(?=\\s\\[)") |>
+        as.character(),
+      scheme_name_bare = dplyr::coalesce(scheme_name_bare, scheme_name),
+
+      # construct the tooltip text
       tooltip_text = dplyr::case_when(
         scheme_code %in% c('NEE') & is.na(value) ~ 'There is no NEE for this mitigator',
         scheme_code %in% c('NEE') ~ glue::glue(
-          "<b>{scheme_name}</b> [{scheme_code}]\n",
+          "<b>{scheme_name_bare}</b> [{scheme_code}]\n",
           "{mitigator_name} [{mitigator_code}]\n",
           "<b>{scales::percent(value, accuracy = 0.1)}</b> {values_displayed}\n",
           "<i>Mitigation:</i> {value_description}\n"
         ),
         scheme_code %in% c('MIN', 'MAX', 'MEAN') ~ glue::glue(
-          "<b>{scheme_name}</b> [{scheme_code}]\n",
+          "<b>{scheme_name_bare}</b> [{scheme_code}]\n",
           "{mitigator_name} [{mitigator_code}]\n",
           "<b>{scales::percent(value, accuracy = 0.1)}</b> {values_displayed}\n"
         ),
         mitigator_code %in% c('MIN', 'MAX', 'MEAN') ~ glue::glue(
-          "<b>{scheme_name}</b> [{scheme_code}]\n",
+          "<b>{scheme_name_bare}</b> [{scheme_code}]\n",
           "{mitigator_name} [{mitigator_code}]\n",
           "<b>{scales::percent(value, accuracy = 0.1)}</b> {values_displayed}\n"
         ),
         .default = glue::glue(
-          "<b>{scheme_name}</b> [{scheme_code}]",
+          "<b>{scheme_name_bare}</b> [{scheme_code}]",
           " {focal_scheme_text}\n",
           "{mitigator_name} [{mitigator_code}]\n",
+          "Run stage: {run_stage}\n", # run stage
+          "Baseline: {year_baseline}, Horizon: {year_horizon}\n", # baseline to horizon year
           "<b>{scales::percent(value, accuracy = 0.1)}</b> {values_displayed}\n",
           "<i>Scheme rank:</i> {value_rank} of {value_rank_total}\n",
           "<i>Mitigation:</i> {value_description}\n",
@@ -543,7 +572,12 @@ prepare_heatmap_dat <- function(
     dplyr::mutate(
       # highlight the focal scheme using ascii
       scheme_name = dplyr::if_else(
-        condition = scheme_code %in% focal_scheme_code,
+        condition = scheme_code %in% focal_scheme_code &
+          stringr::str_ends(
+            string = scheme_name,
+            pattern = "📌",
+            negate = TRUE
+          ),
         true = glue::glue("{scheme_name} 📌"),
         false = scheme_name
       ),

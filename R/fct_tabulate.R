@@ -291,9 +291,13 @@ populate_table <- function(
 #' @param dat Tibble of data - as produced from `populate_table` in `fct_tabulate.R`
 #' @param values_displayed Character - the value in `input$values_displayed` indicating the user's preferred view
 #' @param include_point_estimates Boolean - the value in `input$include_point_estimates` indicating whether point-estimates of 0% mitigation (100% prediction) are to be included
+#' @param focal_scheme_code Character - the scheme code of the focal scheme
 #'
 #' @return Tibble of data with the 'value_' and 'nee_' fields updated to match the user's preferred values
-update_dat_values <- function(dat, values_displayed, include_point_estimates = FALSE) {
+update_dat_values <- function(dat,
+                              values_displayed,
+                              include_point_estimates = FALSE,
+                              focal_scheme_code) {
   if (values_displayed == "Percent of activity mitigated") {
     dat <-
       dat |>
@@ -343,6 +347,17 @@ update_dat_values <- function(dat, values_displayed, include_point_estimates = F
       dplyr::filter(!key %in% dat_exclude$key) |>
       dplyr::select(-key)
   }
+
+  # identify the focal scheme
+  dat <-
+    dat |>
+    dplyr::mutate(
+      scheme_name = dplyr::if_else(
+        condition = scheme_code %in% dplyr::coalesce(focal_scheme_code, ""),
+        true = glue::glue("{scheme_name} 📌"),
+        false = scheme_name
+      )
+    )
 
   return(dat)
 }

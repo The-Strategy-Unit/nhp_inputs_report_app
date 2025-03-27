@@ -586,6 +586,17 @@ app_ui <- function(request) {
                       ),
                       value = FALSE
                     ),
+                    shiny::checkboxInput(
+                      inputId = "toggle_heatmap_scheme_adornments",
+                      label = bslib::tooltip(
+                        trigger = list(
+                          "Adorn scheme names?",
+                          bsicons::bs_icon("info-circle")
+                        ),
+                        "Controls whether scheme names include additional information. Toggle off (default) to show scheme name. Toggle on to see the scheme names along with scheme codes, run stage and years for baseline and horizon."
+                      ),
+                      value = FALSE
+                    ),
                     shiny::selectInput(
                       inputId = "heatmap_scheme_order",
                       label = bslib::tooltip(
