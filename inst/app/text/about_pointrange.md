@@ -6,11 +6,17 @@ Use these plots to compare and contrast schemes' estimated predictions for mitig
 
 Schemes are listed alphabetically on the y-axis by default and either the 80% prediction-interval or the percent of activity mitigated is shown on the x-axis.
 
-Separate plots are provided for each of your selected mitigators. These separate plots are called 'facets'.
+Separate plots are provided for each of your selected mitigators.
 
-Facets are shown in columns and repeated on several rows as required. You can control the number of facet columns using the 'Number of facet columns' slider control in the settings sidebar.
+Plots are placed in 'columns' horizontally and repeated on several vertical 'rows' as required.
+You can control the number of plots per row using the 'Number of charts per row' slider control in the settings sidebar.
 
 Responses for the *Focal scheme* are highlighted in red.
+
+#### Data Availability
+
+Note that schemes and mitigators will not be plotted if there is no data to show.
+Schemes may have chosen not to set a mitigator, or a mitigator [may not have been available](https://connect.strategyunitwm.nhs.uk/nhp/project_information/user_guide/mitigators_lookup.html) when developing a scenario.
 
 #### Settings
 
@@ -28,7 +34,7 @@ Enable this option to switch between mitigator names and the mitigator codes.
 
 Using mitigator codes is useful if horizontal space is limited.
 
-##### Facet by scheme
+##### One chart per scheme
 
 Enable this option to show separate plots for each scheme, with the mitigators listed on the y-axis.
 
@@ -40,9 +46,11 @@ Enable this option to see the range of values suggested from the National Elicit
 
 These are useful aid to check if values are within the ranges suggested by national experts.
 
-##### Number of facet columns
+Bars won't appear if a mitigator wasn't part of the NEE exercise.
 
-Use the slider to control the number of facets shown in each row.
+##### Number of charts per row
+
+Use the slider to control the number of plots shown side-by-side across each row.
 
 ##### Summary
 
@@ -50,4 +58,4 @@ Enable this option to see an aggregate summary of selected schemes' responses (e
 
 This is useful to compare the focal scheme with an aggregate summary of the other schemes' responses.
 
-Enable the *Summary full range* option to see the extreme upper and lower values for the ranges.
+Enable the *Range (selected schemes)* option to see the extreme upper and lower values for the ranges.

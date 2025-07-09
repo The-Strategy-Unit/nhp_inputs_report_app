@@ -27,9 +27,9 @@ plot_heatmap(
 
 \item{values_displayed}{Character - value from `input$values_displayed` - describing if values represent either percent of activity mitigated or the 80% prediction interval - used to label the scales}
 
-\item{heatmap_type}{Character - value from `input$heatmap_type` - used to control whether a solid colour is applied (binary) or colour is dependent on the value}
+\item{heatmap_type}{Character - value from `input$heatmap_type` - used to control whether a solid colour is applied ('submitted' plots) or colour is dependent on the value}
 
-\item{colour_binary}{Character - value from `input$heatmap_binary_colour` - hex colour string to use in the binary plots}
+\item{colour_binary}{Character - value from `input$heatmap_binary_colour` - hex colour string to use in the 'submitted' (binary) plots}
 
 \item{colour_value_low}{Character - value from `input$heatmap_value_colour_low` - hex colour string to use in the gradient fill for low values}
 
@@ -45,5 +45,5 @@ plot_heatmap(
 \description{
 Produces a {plotly} version of the heatmap showing mitigators on the y-axis
 and schemes across the x-axis with the selected mitigator value (mid, low,
-high, binary) controlling the fill colour.
+high, submitted) controlling the fill colour.
 }

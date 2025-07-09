@@ -207,7 +207,7 @@ prepare_heatmap_dat <- function(
   dat <-
     dat |>
     dplyr::mutate(
-      # produce a binary value to show if a value has been set
+      # produce a binary value to show if a value has been submitted
       value_binary = !is.na(value_lo),
       # round the values to avoid precision clutter
       dplyr::across(
@@ -619,14 +619,14 @@ prepare_heatmap_dat <- function(
 #'
 #' Produces a {plotly} version of the heatmap showing mitigators on the y-axis
 #' and schemes across the x-axis with the selected mitigator value (mid, low,
-#' high, binary) controlling the fill colour.
+#' high, submitted) controlling the fill colour.
 #'
 #' @param dat Tibble of mitigator data as produced by `populate_table()` in `fct_tabulate.R`
 #' @param toggle_mitigator_name Boolean - value from `input$toggle_mitigator_name` - used to decide what to display on y-axis
 #' @param toggle_scale_fill_by_mitigator Boolean - value from `input$toggle_heatmap_scale_fill_by_mitigator` - used to control whether the colour is scaled across the whole heatmap (FALSE) or applied across each mitigator (TRUE)
 #' @param values_displayed Character - value from `input$values_displayed` - describing if values represent either percent of activity mitigated or the 80% prediction interval - used to label the scales
-#' @param heatmap_type Character - value from `input$heatmap_type` - used to control whether a solid colour is applied (binary) or colour is dependent on the value
-#' @param colour_binary Character - value from `input$heatmap_binary_colour` - hex colour string to use in the binary plots
+#' @param heatmap_type Character - value from `input$heatmap_type` - used to control whether a solid colour is applied ('submitted' plots) or colour is dependent on the value
+#' @param colour_binary Character - value from `input$heatmap_binary_colour` - hex colour string to use in the 'submitted' (binary) plots
 #' @param colour_value_low Character - value from `input$heatmap_value_colour_low` - hex colour string to use in the gradient fill for low values
 #' @param colour_value_high Character - value from `input$heatmap_value_colour_high` - hex colour string to use in the gradient fill for high values
 #' @param plot_height Integer - value from `ra$heatmap_min_height` - the number of pixels to set as the height of the plot
@@ -924,8 +924,8 @@ plot_heatmap <- function(
 #' @param x_scheme_text ggplot2::element_text - defining how the x-axis labels are to be displayed
 #' @param y_char_wrap Integer - the number of characters to string wrap the y-axis text on
 #' @param values_displayed Character - value from `input$values_displayed` - describing if values represent either percent of activity mitigated or the 80% prediction interval - used to label the scales
-#' @param heatmap_type Character - value from `input$heatmap_type` - used to control whether a solid colour is applied (binary) or colour is dependent on the value
-#' @param colour_binary Character - value from `input$heatmap_binary_colour` - hex colour string to use in the binary plots
+#' @param heatmap_type Character - value from `input$heatmap_type` - used to control whether a solid colour is applied ('submitted' plots) or colour is dependent on the value
+#' @param colour_binary Character - value from `input$heatmap_binary_colour` - hex colour string to use in the 'submitted' (binary) plots
 #' @param colour_value_low Character - value from `input$heatmap_value_colour_low` - hex colour string to use in the gradient fill for low values
 #' @param colour_value_high Character - value from `input$heatmap_value_colour_high` - hex colour string to use in the gradient fill for high values
 #' @param plot_height Integer - value from `ra$heatmap_min_height` - the number of pixels to set as the height of the plot
@@ -1008,7 +1008,7 @@ heatmap_base <- function(
     # remove the legend
     ggplot2::theme(legend.position = 'none')
 
-  # handle non-binary plots
+  # handle non-'submitted' (non-binary) plots
   if (heatmap_type != "value_binary") {
     heatmap <-
       heatmap +
@@ -1032,7 +1032,7 @@ heatmap_base <- function(
     # )
   }
 
-  # handle binary plots
+  # handle 'submitted' (binary) plots
   if (heatmap_type == "value_binary") {
     heatmap <-
       heatmap +

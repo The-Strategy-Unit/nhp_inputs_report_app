@@ -10,6 +10,11 @@ Values are shown as cells at intersections between scheme and mitigator and repr
 
 Empty spaces indicate where a scheme has not set a value for a mitigator.
 
+#### Data Availability
+
+Note that schemes and mitigators will not be plotted if there is no data to show.
+Schemes may have chosen not to set a mitigator, or a mitigator [may not have been available](https://connect.strategyunitwm.nhs.uk/nhp/project_information/user_guide/mitigators_lookup.html) when developing a scenario.
+
 #### Settings
 
 ##### Value type
@@ -22,7 +27,7 @@ Select a value from the drop-down list to be displayed in the heatmap. The defau
 
 -   'High' - the 90% value
 
--   'Binary' - indicating where a response has or has not been provided by schemes
+-   'Submitted' - binary value indicating where a response has or has not been provided by schemes
 
 ##### Standardise by horizon?
 
@@ -38,7 +43,7 @@ Enable this option to switch between mitigator names and the mitigator codes.
 
 Using mitigator codes is useful if horizontal space is limited.
 
-##### Fill by mitigator
+##### Set colour within mitigator?
 
 This option controls how the colours in the heatmap are produced.
 
@@ -58,7 +63,7 @@ This option controls the visibility of aggregate summaries (minimum, maximum and
 
 Enable this option to include the minimum, maximum and average values on the heatmap plot which is useful when exporting to image - where the tooltip context information is lost.
 
-##### Adorn scheme names?
+##### Add run information to scheme name?
 
 This option controls whether the scheme name includes additional details, useful when exporting the plot as a static image and the tooltip context information is lost.
 
@@ -84,14 +89,14 @@ Select a value from the drop-down list for how mitigators are ordered on the y-a
 
 -   'Average mitigation (asc)/(desc)' - order mitigators by their average values set for them by schemes
 
-##### Colour for binary plot
+##### Colour for 'submitted' plot
 
-The colour to use for the 'Binary' heatmap types. Either click into the cell and choose a colour from the palette or specify a hex colour code.
+The colour to use for the binary 'submitted' heatmap types. Either click into the cell and choose a colour from the palette or specify a hexadecimal colour code.
 
 ##### Colour for low values
 
-The colour to use for the extreme low values in the colour gradient heatmaps. Either click into the cell and choose a colour from the palette or specify a hex colour code.
+The colour to use for the extreme low values in the colour gradient heatmaps. Either click into the cell and choose a colour from the palette or specify a hexadecimal colour code.
 
 ##### Colour for high values
 
-The colour to use for the extreme high values in the colour gradient heatmaps. Either click into the cell and choose a colour from the palette or specify a hex colour code.
+The colour to use for the extreme high values in the colour gradient heatmaps. Either click into the cell and choose a colour from the palette or specify a hexadecimal colour code.

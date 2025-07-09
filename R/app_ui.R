@@ -203,10 +203,10 @@ app_ui <- function(request) {
               inputId = "include_point_estimates",
               label = bslib::tooltip(
                 trigger = list(
-                  "Include point estimates?",
+                  "Include zero-mitigation predictions?",
                   bsicons::bs_icon("info-circle")
                 ),
-                "Should point-estimates indicating zero mitigation be included in the results? Toggle off (default) to exclude all point-estimates indicating 0% mitigation, toggle on to show all mitigator values."
+                "Include mitigators where a scheme selected a point-value of zero mitigation, rather than a range? Toggle on to enable, toggle off (default) to exclude."
               ),
               value = FALSE,
               status = "primary",
@@ -290,10 +290,10 @@ app_ui <- function(request) {
                       inputId = "toggle_invert_facets",
                       label = bslib::tooltip(
                         trigger = list(
-                          "Facet by scheme?",
+                          "One plot per scheme?",
                           bsicons::bs_icon("info-circle")
                         ),
-                        "Invert the pointrange plots to show mitigators on the y axis and scheme as the faceting variable."
+                        "Invert the pointrange plots to generate a sub-plot for each scheme with mitigators on the y axis."
                       ),
                       value = FALSE
                     ),
@@ -304,18 +304,18 @@ app_ui <- function(request) {
                           "Show NEE range?",
                           bsicons::bs_icon("info-circle")
                         ),
-                        "Include reference results from the National Elicitation Exercise (NEE) for 2039/40. These values are shown as horizontal bars behind each point illustrating the 10% to 90% range, with a vertical line marking the mean value."
+                        "Include reference results from the National Elicitation Exercise (NEE) for 2039/40 if the mitigator was part of that exercise. These values are shown as horizontal bars behind each point illustrating the 10% to 90% range, with a vertical line marking the mean value."
                       ),
-                      value = TRUE
+                      value = FALSE
                     ),
                     shiny::sliderInput(
                       inputId = "facet_columns",
                       label = bslib::tooltip(
                         trigger = list(
-                          "Number of facet columns",
+                          "Number of charts per row",
                           bsicons::bs_icon("info-circle")
                         ),
-                        "Choose the number of columns over which to break the faceted pointrange charts."
+                        "Choose the number of plots to show side-by-side."
                       ),
                       min = 1,
                       max = 5, # will be reactively updated to match the number of facets
@@ -328,7 +328,7 @@ app_ui <- function(request) {
                       inputId = "toggle_aggregate_summary",
                       label = bslib::tooltip(
                         trigger = list(
-                          "Summary",
+                          "Summary (selected schemes)",
                           bsicons::bs_icon("info-circle")
                         ),
                         "Add an aggregate summary of selected schemes' responses to the plot (includes all but the focal scheme)."
@@ -341,7 +341,7 @@ app_ui <- function(request) {
                       inputId = "toggle_aggregate_summary_minmaxrange",
                       label = bslib::tooltip(
                         trigger = list(
-                          "Summary full range",
+                          "Range (selected schemes)",
                           bsicons::bs_icon("info-circle")
                         ),
                         "Show the full range of selected schemes' responses, i.e. the extreme upper and lower values, or switch off to view the average (mean) range."
@@ -439,9 +439,9 @@ app_ui <- function(request) {
                           "Show NEE range?",
                           bsicons::bs_icon("info-circle")
                         ),
-                        "Include reference results from the National Elicitation Exercise (NEE) for 2039/40. These values are shown as horizontal bars behind each point illustrating the 10% to 90% range, with a vertical line marking the mean value."
+                        "Include reference results from the National Elicitation Exercise (NEE) for 2039/40 if the mitigator was part of that exercise. These values are shown as horizontal bars behind each point illustrating the 10% to 90% range, with a vertical line marking the mean value."
                       ),
-                      value = TRUE
+                      value = FALSE
                     ),
 
                     shiny::bookmarkButton(
@@ -533,7 +533,7 @@ app_ui <- function(request) {
                         "Schemes' low or high 80% confidence internal selection in the NHP inputs app, or the range or midpoint of these."
                       ),
                       choices = c(
-                        Binary = "value_binary",
+                        Submitted = "value_binary",
                         Midpoint = "value_mid",
                         Range = "value_range",
                         Low = "value_lo",
@@ -557,7 +557,7 @@ app_ui <- function(request) {
                       inputId = "toggle_heatmap_scale_fill_by_mitigator",
                       label = bslib::tooltip(
                         trigger = list(
-                          "Fill by mitigator?",
+                          "Set colour within mitigator?",
                           bsicons::bs_icon("info-circle")
                         ),
                         "Controls whether the range of colours is set per mitigator or across the whole heatmap. Toggle on to colour the heatmap by each mitigator (default) or off to colour the heatmap by all values."
@@ -590,7 +590,7 @@ app_ui <- function(request) {
                       inputId = "toggle_heatmap_scheme_adornments",
                       label = bslib::tooltip(
                         trigger = list(
-                          "Adorn scheme names?",
+                          "Add run information to scheme name?",
                           bsicons::bs_icon("info-circle")
                         ),
                         "Controls whether scheme names include additional information. Toggle off (default) to show scheme name. Toggle on to see the scheme names along with scheme codes, run stage and years for baseline and horizon."
@@ -641,10 +641,10 @@ app_ui <- function(request) {
                       inputId = "heatmap_binary_colour",
                       label = bslib::tooltip(
                         trigger = list(
-                          "Colour for binary plot",
+                          "Colour for 'submitted' plot",
                           bsicons::bs_icon("info-circle")
                         ),
-                        "The colour to use where a scheme has set a value for a mitigator - 'binary' plot types only."
+                        "The colour to use where a scheme has set a value for a mitigator - 'submitted' plot types only."
                       ),
                       value = "#273c75",
                       showColour = "both",
@@ -657,7 +657,7 @@ app_ui <- function(request) {
                           "Colour for low values",
                           bsicons::bs_icon("info-circle")
                         ),
-                        "The colour to use where a scheme has set a low value for a mitigator - non-'binary' plot types only."
+                        "The colour to use where a scheme has set a low value for a mitigator - non-'submitted' plot types only."
                       ),
                       value = "#22A6B3",
                       showColour = "both",
@@ -670,7 +670,7 @@ app_ui <- function(request) {
                           "Colour for high values",
                           bsicons::bs_icon("info-circle")
                         ),
-                        "The colour to use where a scheme has set a high value for a mitigator - non-'binary' plot types only."
+                        "The colour to use where a scheme has set a high value for a mitigator - non-'submitted' plot types only."
                       ),
                       value = "#130F40",
                       showColour = "both",
@@ -969,7 +969,7 @@ app_ui <- function(request) {
                           "Show other schemes?",
                           bsicons::bs_icon("info-circle")
                         ),
-                        "Shows trendline plots for schemes other than the focal scheme as grey traces."
+                        "Shows trendline plots for schemes other than the focal scheme as grey lines"
                       ),
                       value = FALSE
                     ),
