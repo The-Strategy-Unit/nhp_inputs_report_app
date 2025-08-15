@@ -23,6 +23,7 @@
 # Allow
 !golem-config.yml
 !ref_inputs-golem-config.yml
+!.github/workflows/*.yaml
 
 # History files
 .Rhistory
