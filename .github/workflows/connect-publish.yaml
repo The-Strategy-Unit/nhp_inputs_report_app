@@ -2,6 +2,7 @@ name: connect-publish
 on:
   release:
     types: [published]
+  pull_request:
 
 jobs:
   connect-publish:
@@ -17,8 +18,8 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-            extra-packages: |
-                any::rsconnect
+          extra-packages: |
+            local::.
 
       - name: Create manifest.json
         shell: Rscript {0}
@@ -26,6 +27,7 @@ jobs:
           rsconnect::writeManifest()
 
       - name: Publish Connect content
+        if: github.event_name != 'pull_request'
         uses: rstudio/actions/connect-publish@main
         env:
           CONNECT_ENV_SET_AZ_STORAGE_CONTAINER_INPUTS: ${{ secrets.AZ_STORAGE_CONTAINER_INPUTS }}

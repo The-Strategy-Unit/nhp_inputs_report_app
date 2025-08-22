@@ -19,6 +19,7 @@ Imports:
     bslib (>= 0.7.0),
     colourpicker,
     config (>= 0.3.1),
+    covrpage,
     data.table,
     datamods (>= 1.5.3.9100),
     distr,
@@ -53,10 +54,14 @@ Imports:
     withr,
     yaml
 Suggests: 
+    attachment,
+    devtools,
     rsconnect,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    usethis
 Remotes: 
-    dreamRs/datamods
+    github::dreamRs/datamods
+    github::yonicd/covrpage
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
